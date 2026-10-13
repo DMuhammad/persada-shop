@@ -7,9 +7,12 @@ import intersect from "@alpinejs/intersect";
 import rangeSlider from "range-slider-input";
 import L from "leaflet";
 import "trix";
+import Select from './select';
 
 Alpine.plugin(intersect);
 Chart.register(...registerables);
+
+window.Select = Select;
 
 window.Alpine = Alpine;
 Alpine.start();
