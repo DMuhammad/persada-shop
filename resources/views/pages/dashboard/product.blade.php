@@ -43,7 +43,7 @@
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 <span
-                                    class="px-2 inline-flex text-xs font-semibold rounded-full 
+                                    class="px-2 inline-flex text-xs font-semibold rounded-full
                                 {{ $product->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800' }}">
                                     {{ ucfirst($product->status) }}
                                 </span>
@@ -109,7 +109,7 @@
 
                         <div>
                             <label class="block text-sm font-medium">Kategori</label>
-                            <select name="category_id" x-model="formData.category_id"
+                            <select name="category_id" id="category"
                                 class="mt-1 w-full rounded border-gray-300 dark:bg-gray-700" required>
                                 <option value="">-- Pilih Kategori --</option>
                                 @foreach ($categories as $category)
@@ -154,6 +154,12 @@
 
 @push('scripts')
     <script>
+        let categorySelect;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            categorySelect = new Select('#category').tags().build();
+        });
+
         function productCrud() {
             return {
                 isOpen: false,
@@ -164,7 +170,6 @@
                 formData: {
                     id: null,
                     name: '',
-                    category_id: '',
                     description: '',
                     status: 'active'
                 },
@@ -186,10 +191,10 @@
                         this.formData = {
                             id: null,
                             name: '',
-                            category_id: '',
                             description: '',
                             status: 'active'
                         };
+                        categorySelect.clear();
 
                         this.$nextTick(() => {
                             this.$refs.trixEditor.editor.loadHTML('');
@@ -205,10 +210,10 @@
                         this.formData = {
                             id: product.id,
                             name: product.name,
-                            category_id: product.category_id,
                             description: product.description ?? '',
                             status: product.status
                         };
+                        categorySelect.setSelected(product.category_id, product.category?.name ?? product.category_id);
 
                         this.$nextTick(() => {
                             this.$refs.trixEditor.editor.loadHTML(this.formData.description);

@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\ProductRequest;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -27,18 +26,12 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255|unique:products,name',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:active,inactive',
-        ]);
-
-        $validated['slug'] = Str::slug($validated['name']);
-
-        Product::create($validated);
+        DB::transaction(function () use ($request) {
+            $validated = $request->validated();
+            Product::create($validated);
+        });
 
         return redirect()->route('master.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
@@ -46,23 +39,13 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'name'        => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('products', 'name')->ignore($product->id),
-            ],
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:active,inactive',
-        ]);
+        DB::transaction(function () use ($request, $product) {
+            $validated = $request->validated();
+            $product->update($validated);
+        });
 
-        $validated['slug'] = Str::slug($validated['name']);
-
-        $product->update($validated);
 
         return redirect()->route('master.products.index')->with('success', 'Produk berhasil diperbarui.');
     }
