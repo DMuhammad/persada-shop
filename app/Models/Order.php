@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory, HasUuids;
+
+    /**
+     * Carries the status label and its badge classes into the JSON the
+     * dashboard renders with Alpine.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['status_label', 'status_badge_class'];
 
     protected $fillable = [
         'order_number',
@@ -39,7 +49,18 @@ class Order extends Model
             'discount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'paid_at' => 'datetime',
+            'status' => OrderStatus::class,
         ];
+    }
+
+    protected function statusLabel(): Attribute
+    {
+        return Attribute::get(fn (): string => $this->status?->label() ?? '');
+    }
+
+    protected function statusBadgeClass(): Attribute
+    {
+        return Attribute::get(fn (): string => $this->status?->badgeClass() ?? '');
     }
 
     public function user()

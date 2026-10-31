@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatusGroup;
 use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -11,26 +12,22 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Auth::user()->orders();
+        $group = is_numeric($request->query('status'))
+            ? OrderStatusGroup::tryFrom((int) $request->query('status'))
+            : null;
 
-        if ($request->filled('status')) {
-            $status = $request->status;
-            if ($status == 'unpaid') {
-                $query->where('status', 'pending_payment');
-            } elseif ($status == 'processing') {
-                $query->whereIn('status', ['paid', 'processing']);
-            } elseif ($status == 'shipped') {
-                $query->where('status', 'shipped');
-            } elseif ($status == 'completed') {
-                $query->whereIn('status', ['delivered', 'completed']);
-            }
-        }
-
-        $orders = $query->with('items.productVariant.product.primaryImage')
+        $orders = Auth::user()->orders()
+            ->when($group, fn ($query) => $query->whereIn('status', $group->statuses()))
+            ->with('items.productVariant.product.primaryImage')
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('pages.home.order', compact('orders'));
+        return view('pages.home.order', [
+            'orders' => $orders,
+            'groups' => OrderStatusGroup::cases(),
+            'group' => $group,
+        ]);
     }
 
     public function orderDetail(Order $order)

@@ -17,35 +17,8 @@
                     <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate sm:tracking-tight">
                         Pesanan #{{ $order->order_number }}
                     </h1>
-                    <span @class([
-                        'px-2.5 py-1 text-xs font-medium rounded-full',
-                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => in_array(
-                            $order->status,
-                            ['completed', 'delivered']),
-                        'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' =>
-                            $order->status == 'paid',
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' => in_array(
-                            $order->status,
-                            ['shipped', 'processing']),
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' =>
-                            $order->status == 'pending_payment',
-                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => in_array(
-                            $order->status,
-                            ['cancelled', 'refunded']),
-                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' => !in_array(
-                            $order->status,
-                            [
-                                'completed',
-                                'delivered',
-                                'paid',
-                                'shipped',
-                                'processing',
-                                'pending_payment',
-                                'cancelled',
-                                'refunded',
-                            ]),
-                    ])>
-                        {{ Str::title(str_replace('_', ' ', $order->status)) }}
+                    <span class="px-2.5 py-1 text-xs font-medium rounded-full {{ $order->status->badgeClass() }}">
+                        {{ $order->status->label() }}
                     </span>
                 </div>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -146,8 +119,8 @@
                         <select id="status" name="status"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-persada-primary focus:ring-persada-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             @foreach ($statuses as $status)
-                                <option value="{{ $status }}" @if ($order->status == $status) selected @endif>
-                                    {{ Str::title(str_replace('_', ' ', $status)) }}</option>
+                                <option value="{{ $status->value }}" @selected($order->status === $status)>
+                                    {{ $status->label() }}</option>
                             @endforeach
                         </select>
                     </div>

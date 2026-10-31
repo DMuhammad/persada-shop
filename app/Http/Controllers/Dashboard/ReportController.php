@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Order;
@@ -10,6 +11,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use App\Exports\SalesExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -33,14 +36,14 @@ class ReportController extends Controller
         $request->validate([
             'start_date'  => 'nullable|date',
             'end_date'    => 'nullable|date|after_or_equal:start_date',
-            'status'      => 'nullable|string|in:paid,processing,shipped,delivered,completed',
+            'status'      => ['nullable', 'integer', Rule::in(OrderStatus::settledCases())],
             'category_id' => 'nullable|uuid|exists:categories,id',
         ]);
 
         [$startDate, $endDate] = $this->getDateRange($request);
 
         $categories = Category::orderBy('name')->get();
-        $validStatus = ['paid', 'processing', 'shipped', 'delivered', 'completed'];
+        $validStatus = OrderStatus::settledCases();
 
         $query = Order::whereIn('status', $validStatus)
             ->when($request->status, fn($q, $status) => $q->where('status', $status))
@@ -130,7 +133,7 @@ class ReportController extends Controller
 
         [$startDate, $endDate] = $this->getDateRange($request);
 
-        $validStatus = ['paid', 'processing', 'shipped', 'delivered', 'completed'];
+        $validStatus = OrderStatus::settledCases();
 
         $newCustomersCount = User::where('role', 'customer')
             ->whereBetween('created_at', [$startDate, $endDate])

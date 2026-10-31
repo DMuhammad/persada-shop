@@ -2,21 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
-use App\Services\Stock\StockService;
-use Exception;
+use App\Services\Order\OrderStatusService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
-use App\Models\User;
-use App\Notifications\OrderCancelledNotification;
-use App\Notifications\PaymentConfirmedNotification;
-use Illuminate\Support\Facades\Notification;
 
 class MidtransController extends Controller
 {
-    public function webhook(Request $request, StockService $stockService)
+    public function webhook(Request $request, OrderStatusService $orderStatus)
     {
         Config::$serverKey = config('services.midtrans.server_key');
         Config::$isProduction = config('services.midtrans.is_production');
@@ -48,52 +43,14 @@ class MidtransController extends Controller
             $transactionStatus = $payload['transaction_status'];
             $fraudStatus = $payload['fraud_status'];
 
-            DB::transaction(function () use ($order, $transactionStatus, $fraudStatus, $stockService) {
-                if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
-                    if ($fraudStatus == 'accept') {
-                        if ($order->status == 'pending_payment') {
-                            $order->status = 'paid';
-                            $order->paid_at = now();
-                            $order->save();
-
-                            try {
-                                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                                if ($admins->isNotEmpty()) {
-                                    Notification::send($admins, new PaymentConfirmedNotification($order));
-                                }
-                            } catch (Exception $e) {
-                                Log::error('Gagal mengirim notifikasi pembayaran terkonfirmasi: ' . $e->getMessage());
-                            }
-
-                            foreach ($order->items as $item) {
-                                if ($item->productVariant) {
-                                    $stockService->sell($item->productVariant, $item->quantity, $order);
-                                }
-                            }
-                        }
-                    }
-                } elseif ($transactionStatus == 'expire' || $transactionStatus == 'cancel' || $transactionStatus == 'deny') {
-                    if ($order->status == 'pending_payment') {
-                        $order->status = 'cancelled';
-                        $order->save();
-
-                        try {
-                            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                            if ($admins->isNotEmpty()) {
-                                Notification::send($admins, new OrderCancelledNotification($order));
-                            }
-                        } catch (Exception $e) {
-                            Log::error('Gagal mengirim notifikasi pembatalan pesanan: ' . $e->getMessage());
-                        }
-
-                        foreach ($order->items as $item) {
-                            if ($item->productVariant) {
-                                $stockService->release($item->productVariant, $item->quantity);
-                            }
-                        }
-                    }
+            // The gateway only ever decides the fate of an order that is still unpaid.
+            if ($order->status->awaitsPayment()) {
+                if (in_array($transactionStatus, ['capture', 'settlement'], true) && $fraudStatus == 'accept') {
+                    $orderStatus->change($order, OrderStatus::PAID);
+                } elseif (in_array($transactionStatus, ['expire', 'cancel', 'deny'], true)) {
+                    $orderStatus->change($order, OrderStatus::CANCELLED);
                 }
-            });
+            }
 
             Log::info('Midtrans Webhook: Processed successfully', ['order_id' => $orderId]);
             return response()->json(['message' => 'Notification processed successfully']);

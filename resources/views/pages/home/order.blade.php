@@ -16,48 +16,21 @@
                     <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
                         <a href="{{ route('order.index') }}" @class([
                             'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                            'border-persada-primary text-persada-primary' => !request('status'),
-                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' => request(
-                                'status'),
+                            'border-persada-primary text-persada-primary' => !$group,
+                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' => $group,
                         ])>
                             Semua
                         </a>
-                        <a href="{{ route('order.index', ['status' => 'unpaid']) }}" @class([
-                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                            'border-persada-primary text-persada-primary' =>
-                                request('status') == 'unpaid',
-                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' =>
-                                request('status') != 'unpaid',
-                        ])>
-                            Belum Dibayar
-                        </a>
-                        <a href="{{ route('order.index', ['status' => 'processing']) }}" @class([
-                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                            'border-persada-primary text-persada-primary' =>
-                                request('status') == 'processing',
-                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' =>
-                                request('status') != 'processing',
-                        ])>
-                            Diproses
-                        </a>
-                        <a href="{{ route('order.index', ['status' => 'shipped']) }}" @class([
-                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                            'border-persada-primary text-persada-primary' =>
-                                request('status') == 'shipped',
-                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' =>
-                                request('status') != 'shipped',
-                        ])>
-                            Dikirim
-                        </a>
-                        <a href="{{ route('order.index', ['status' => 'completed']) }}" @class([
-                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                            'border-persada-primary text-persada-primary' =>
-                                request('status') == 'completed',
-                            'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' =>
-                                request('status') != 'completed',
-                        ])>
-                            Selesai
-                        </a>
+                        @foreach ($groups as $statusGroup)
+                            <a href="{{ route('order.index', ['status' => $statusGroup->value]) }}" @class([
+                                'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
+                                'border-persada-primary text-persada-primary' => $group === $statusGroup,
+                                'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' =>
+                                    $group !== $statusGroup,
+                            ])>
+                                {{ $statusGroup->label() }}
+                            </a>
+                        @endforeach
                     </nav>
                 </div>
             </div>
@@ -84,18 +57,9 @@
                                 <div class="hidden sm:block">
                                     <dt class="font-medium text-gray-500">Status</dt>
                                     <dd class="mt-1">
-                                        <span @class([
-                                            'px-2 py-0.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5',
-                                            'bg-yellow-100 text-yellow-800' => $order->status === 'pending_payment',
-                                            'bg-green-100 text-green-800' => $order->status === 'paid',
-                                            'bg-blue-100 text-blue-800' => $order->status === 'processing',
-                                            'bg-indigo-100 text-indigo-800' => $order->status === 'shipped',
-                                            'bg-teal-100 text-teal-800' => $order->status === 'delivered',
-                                            'bg-slate-200 text-slate-800' => $order->status === 'completed',
-                                            'bg-red-100 text-red-800' => $order->status === 'cancelled',
-                                            'bg-gray-100 text-gray-800' => $order->status === 'refunded',
-                                        ])>
-                                            {{ ucwords(str_replace('_', ' ', $order->status)) }}
+                                        <span
+                                            class="px-2 py-0.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 {{ $order->status->badgeClass() }}">
+                                            {{ $order->status->label() }}
                                         </span>
                                     </dd>
                                 </div>

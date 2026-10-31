@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -146,7 +147,7 @@ class CheckoutController extends Controller
                     'subtotal' => $subtotal,
                     'shipping_cost' => $shippingRate['price'],
                     'grand_total' => $subtotal + $shippingRate['price'],
-                    'status' => 'pending_payment',
+                    'status' => OrderStatus::PENDING_PAYMENT,
                     'payment_method' => $validated['payment_method'],
                 ]);
 

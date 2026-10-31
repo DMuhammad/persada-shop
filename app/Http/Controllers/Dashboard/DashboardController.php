@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -16,7 +17,7 @@ class DashboardController extends Controller
     {
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfDay();
-        $validStatus = ['paid', 'processing', 'shipped', 'delivered', 'completed'];
+        $validStatus = OrderStatus::settledCases();
 
         $totalRevenue = Order::whereIn('status', $validStatus)
             ->whereBetween('created_at', [$startDate, $endDate])

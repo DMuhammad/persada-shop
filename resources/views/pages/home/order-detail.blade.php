@@ -33,54 +33,13 @@
                     <div class="bg-gray-50 rounded-2xl p-6">
                         <h3 class="text-base font-semibold text-gray-900">Status Pesanan</h3>
                         <div class="mt-2">
-                            <span @class([
-                                'px-3 py-1 text-xs font-bold rounded-full inline-flex items-center gap-1.5',
-                                'bg-yellow-100 text-yellow-800' => $order->status === 'pending_payment',
-                                'bg-green-100 text-green-800' => $order->status === 'paid',
-                                'bg-blue-100 text-blue-800' => $order->status === 'processing',
-                                'bg-indigo-100 text-indigo-800' => $order->status === 'shipped',
-                                'bg-teal-100 text-teal-800' => $order->status === 'delivered',
-                                'bg-slate-200 text-slate-800' => $order->status === 'completed',
-                                'bg-red-100 text-red-800' => $order->status === 'cancelled',
-                                'bg-gray-100 text-gray-800' => $order->status === 'refunded',
-                            ])>
-                                @switch($order->status)
-                                    @case('pending_payment')
-                                        <x-heroicon-s-clock class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('paid')
-                                        <x-heroicon-s-check-circle class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('processing')
-                                        <x-heroicon-s-archive-box class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('shipped')
-                                        <x-heroicon-s-truck class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('delivered')
-                                        <x-heroicon-s-home-modern class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('completed')
-                                        <x-heroicon-s-sparkles class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('cancelled')
-                                        <x-heroicon-s-x-circle class="h-3.5 w-3.5" />
-                                    @break
-
-                                    @case('refunded')
-                                        <x-heroicon-s-arrow-uturn-left class="h-3.5 w-3.5" />
-                                    @break
-                                @endswitch
-                                {{ ucwords(str_replace('_', ' ', $order->status)) }}
+                            <span
+                                class="px-3 py-1 text-xs font-bold rounded-full inline-flex items-center gap-1.5 {{ $order->status->badgeClass() }}">
+                                @svg($order->status->icon(), 'h-3.5 w-3.5')
+                                {{ $order->status->label() }}
                             </span>
                         </div>
-                        @if ($order->status == 'pending_payment' && $order->payment_url)
+                        @if ($order->status->awaitsPayment() && $order->payment_url)
                             <a href="{{ $order->payment_url }}" target="_blank"
                                 class="mt-4 block w-full bg-persada-primary text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition hover:bg-persada-dark text-center">
                                 Lanjutkan Pembayaran

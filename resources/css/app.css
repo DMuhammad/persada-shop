@@ -32,6 +32,8 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+/* Enums hold the badge classes of a status, so PHP is scanned as well. */
+@source '../../app/**/*.php';
 
 @import "notyf/notyf.min.css";
 @import "trix/dist/trix.css";

@@ -14,9 +14,9 @@
                 Semua
             </a>
             @foreach ($statuses as $status)
-                <a href="{{ route('dashboard.orders.index', ['status' => $status]) }}"
+                <a href="{{ route('dashboard.orders.index', ['status' => $status->value]) }}"
                     class="shrink-0 border-b-2 px-1 pb-4 text-sm font-medium {{ $currentStatus === $status ? 'border-persada-primary text-persada-primary' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200' }}">
-                    {{ Str::title(str_replace('_', ' ', $status)) }}
+                    {{ $status->label() }}
                 </a>
             @endforeach
         </nav>
@@ -59,35 +59,9 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200 text-right">Rp
                             {{ number_format($order->grand_total, 0, ',', '.') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span @class([
-                                'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => in_array(
-                                    $order->status,
-                                    ['completed', 'delivered']),
-                                'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' =>
-                                    $order->status == 'paid',
-                                'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' => in_array(
-                                    $order->status,
-                                    ['shipped', 'processing']),
-                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' =>
-                                    $order->status == 'pending_payment',
-                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => in_array(
-                                    $order->status,
-                                    ['cancelled', 'refunded']),
-                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' => !in_array(
-                                    $order->status,
-                                    [
-                                        'completed',
-                                        'delivered',
-                                        'paid',
-                                        'shipped',
-                                        'processing',
-                                        'pending_payment',
-                                        'cancelled',
-                                        'refunded',
-                                    ]),
-                            ])>
-                                {{ Str::title(str_replace('_', ' ', $order->status)) }}
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $order->status->badgeClass() }}">
+                                {{ $order->status->label() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">

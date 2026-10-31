@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -26,7 +27,7 @@ class SalesExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        $validStatus = ['paid', 'processing', 'shipped', 'delivered', 'completed'];
+        $validStatus = OrderStatus::settledCases();
 
         return Order::query()
             ->with('user')
@@ -77,7 +78,7 @@ class SalesExport implements FromQuery, WithHeadings, WithMapping
             $order->user->name ?? 'N/A',
             $order->user->email ?? 'N/A',
             Carbon::parse($order->created_at)->format('d F Y, H:i'),
-            Str::title(str_replace('_', ' ', $order->status)),
+            $order->status->label(),
             $paymentMethod ?? 'N/A',
             $order->subtotal,
             $order->shipping_cost,

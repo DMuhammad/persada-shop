@@ -85,7 +85,7 @@
                                     {{ number_format($order->grand_total, 0, ',', '.') }}</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                     <span
-                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">{{ Str::title(str_replace('_', ' ', $order->status)) }}</span>
+                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">{{ $order->status->label() }}</span>
                                 </td>
                             </tr>
                         @empty

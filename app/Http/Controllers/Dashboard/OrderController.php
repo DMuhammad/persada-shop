@@ -2,33 +2,31 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\User;
-use App\Notifications\OrderCancelledNotification;
-use App\Services\Stock\StockService;
+use App\Services\Order\OrderStatusService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $statuses = ['pending_payment', 'paid', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'refunded'];
-        $currentStatus = $request->query('status');
+        $currentStatus = is_numeric($request->query('status'))
+            ? OrderStatus::tryFrom((int) $request->query('status'))
+            : null;
 
-        $orderQuery = Order::latest()->with('user');
-
-        if (in_array($currentStatus, $statuses)) {
-            $orderQuery->where('status', $currentStatus);
-        }
-
-        $orders = $orderQuery->paginate(10)->withQueryString();
+        $orders = Order::latest()
+            ->with('user')
+            ->when($currentStatus, fn ($query) => $query->where('status', $currentStatus))
+            ->paginate(10)
+            ->withQueryString();
 
         return view('pages.dashboard.order', [
             'orders' => $orders,
-            'statuses' => $statuses,
+            'statuses' => OrderStatus::cases(),
             'currentStatus' => $currentStatus,
         ]);
     }
@@ -37,63 +35,22 @@ class OrderController extends Controller
     {
         $order->load(['user', 'items.productVariant.product.primaryImage']);
 
-        $statuses = ['pending_payment', 'paid', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'refunded'];
-
         return view('pages.dashboard.order-detail', [
             'order' => $order,
-            'statuses' => $statuses
+            'statuses' => OrderStatus::cases(),
         ]);
     }
 
-    public function updateStatus(Request $request, Order $order, StockService $stockService)
+    public function updateStatus(Request $request, Order $order, OrderStatusService $orderStatus)
     {
-        $statuses = ['pending_payment', 'paid', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'refunded'];
+        $validated = $request->validate(
+            ['status' => ['required', 'integer', Rule::in(OrderStatus::cases())]],
+            ['status' => 'Status pesanan yang dipilih tidak valid.'],
+        );
 
-        $request->validate([
-            'status' => 'required|in:' . implode(',', $statuses),
-        ]);
-
-        $newStatus = $request->status;
-        $oldStatus = $order->status;
-
-        $order->update(['status' => $newStatus]);
-
-        if ($newStatus !== $oldStatus && in_array($newStatus, ['cancelled', 'refunded'], true)) {
-            $this->giveBackStock($order, $oldStatus, $stockService);
-        }
-
-        if ($newStatus === 'cancelled' && $oldStatus === 'pending_payment') {
-            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-            Notification::send($admins, new OrderCancelledNotification($order));
-        }
+        $orderStatus->change($order, OrderStatus::from((int) $validated['status']));
 
         return redirect()->route('dashboard.orders.show', $order->order_number)->with('success', 'Status pesanan berhasil diperbarui.');
-    }
-
-    /**
-     * Gives the stock of a cancelled order back. An unpaid order only frees its
-     * hold, while a paid one returns the goods as an incoming movement.
-     */
-    private function giveBackStock(Order $order, string $previousStatus, StockService $stockService): void
-    {
-        $paidStatuses = ['paid', 'processing', 'shipped', 'delivered', 'completed'];
-
-        foreach ($order->items as $item) {
-            if (! $item->productVariant) {
-                continue;
-            }
-
-            if ($previousStatus === 'pending_payment') {
-                $stockService->release($item->productVariant, $item->quantity);
-            } elseif (in_array($previousStatus, $paidStatuses, true)) {
-                $stockService->restock(
-                    $item->productVariant,
-                    $item->quantity,
-                    $order,
-                    "Pengembalian stok pesanan {$order->order_number}.",
-                );
-            }
-        }
     }
 
     public function invoice(Order $order)

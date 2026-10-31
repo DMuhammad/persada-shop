@@ -32,10 +32,10 @@
                         <select name="status" id="status"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-persada-primary focus:ring-persada-primary sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:focus:ring-persada-primary">
                             <option value="">Semua Status</option>
-                            <option value="paid" @selected(request('status') == 'paid')>Paid</option>
-                            <option value="processing" @selected(request('status') == 'processing')>Processing</option>
-                            <option value="shipped" @selected(request('status') == 'shipped')>Shipped</option>
-                            <option value="completed" @selected(request('status') == 'completed')>Completed</option>
+                            @foreach (App\Enums\OrderStatus::settledCases() as $status)
+                                <option value="{{ $status->value }}" @selected(request('status') == $status->value)>
+                                    {{ $status->label() }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
@@ -133,7 +133,7 @@
                                     {{ number_format($order->grand_total, 0, ',', '.') }}</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                     <span
-                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">{{ Str::title(str_replace('_', ' ', $order->status)) }}</span>
+                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">{{ $order->status->label() }}</span>
                                 </td>
                             </tr>
                         @empty

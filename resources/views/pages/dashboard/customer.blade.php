@@ -157,26 +157,7 @@
                                                 <p class="font-semibold text-gray-900 dark:text-white"
                                                     x-text="`Rp ${Number(order.grand_total).toLocaleString('id-ID')}`"></p>
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                                    :class="{
-                                                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': [
-                                                            'completed', 'delivered'
-                                                        ].includes(order.status),
-                                                        'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200': order
-                                                            .status === 'paid',
-                                                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': [
-                                                            'shipped', 'processing'
-                                                        ].includes(order.status),
-                                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': order
-                                                            .status === 'pending_payment',
-                                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': [
-                                                            'cancelled', 'refunded'
-                                                        ].includes(order.status),
-                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300':
-                                                            !['completed', 'delivered', 'paid', 'shipped', 'processing',
-                                                                'pending_payment', 'cancelled', 'refunded'
-                                                            ].includes(order.status)
-                                                    }"
-                                                    x-text="order.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())">
+                                                    :class="order.status_badge_class" x-text="order.status_label">
                                                 </span>
                                             </div>
                                         </div>

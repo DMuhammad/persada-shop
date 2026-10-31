@@ -140,7 +140,7 @@
 <body>
     <div class="container">
         {{-- Stempel LUNAS (jika sudah bayar) --}}
-        @if ($order->status != 'pending_payment')
+        @if (!$order->status->awaitsPayment())
             <div class="status-paid">Lunas</div>
         @endif
 

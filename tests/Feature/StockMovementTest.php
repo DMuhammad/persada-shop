@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OrderStatus;
 use App\Enums\StockMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Category;
@@ -12,31 +13,6 @@ use App\Services\Stock\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
-
-/**
- * Creates a variant with a starting balance through the stock service.
- */
-function variantWithStock(int $quantity = 0): ProductVariant
-{
-    $category = Category::create(['name' => 'Kategori Uji']);
-
-    $product = Product::create([
-        'name' => 'Produk Uji',
-        'slug' => 'produk-uji',
-        'category_id' => $category->id,
-        'status' => 'active',
-    ]);
-
-    $variant = $product->variants()->create([
-        'name' => 'Varian Uji',
-        'price' => 10000,
-        'moq' => 1,
-    ]);
-
-    app(StockService::class)->initialize($variant, $quantity);
-
-    return $variant->refresh();
-}
 
 /**
  * Sums every movement of a variant, which must match the stored balance.
@@ -149,6 +125,6 @@ function orderFor(ProductVariant $variant): Order
         'subtotal' => 10000,
         'shipping_cost' => 0,
         'grand_total' => 10000,
-        'status' => 'paid',
+        'status' => OrderStatus::PAID,
     ]);
 }
