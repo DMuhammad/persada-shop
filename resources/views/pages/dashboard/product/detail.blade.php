@@ -3,7 +3,7 @@
 @section('title', 'Detail Produk')
 
 @section('content')
-    <div x-data="imagePreview()">
+    <div x-data>
         <div class="flex flex-col items-start justify-between gap-4 mb-6 sm:flex-row sm:items-center">
             <div>
                 <a href="{{ route('master.products.index') }}"
@@ -35,8 +35,8 @@
                         <x-heroicon-o-x-circle class="h-5 w-5 text-red-400" />
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Terdapat {{ $errors->count() }} error
-                            pada input Anda:</h3>
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Terdapat {{ $errors->count() }}
+                            error pada input Anda:</h3>
                         <div class="mt-2 text-sm text-red-700 dark:text-red-400">
                             <ul role="list" class="list-disc space-y-1 pl-5">
                                 @foreach ($errors->all() as $error)
@@ -70,39 +70,14 @@
             </div>
 
             <div class="p-6 bg-white rounded-lg shadow-sm dark:bg-gray-800">
-                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Gambar Produk</h2>
-                <form action="{{ route('master.products.images.store', $product) }}" method="POST"
-                    enctype="multipart/form-data" class="p-4 mb-6 border border-dashed rounded-lg dark:border-gray-600">
-                    @csrf
-                    <div class="flex flex-col items-center gap-4 sm:flex-row">
-                        <div class="relative flex-1 w-full">
-                            <label for="image-upload"
-                                class="flex items-center justify-center w-full h-24 px-2 text-sm text-gray-500 border border-gray-300 rounded-md cursor-pointer dark:border-gray-500 dark:text-gray-400">
-                                <template x-if="imagePreviewUrl">
-                                    <img :src="imagePreviewUrl" class="object-contain h-full max-w-full rounded">
-                                </template>
-                                <div x-show="!imagePreviewUrl" class="text-center">
-                                    <x-heroicon-o-photo class="w-8 h-8 mx-auto text-gray-400" />
-                                    <span x-text="imageName ?? 'Pilih file gambar...'"></span>
-                                </div>
-                            </label>
-                            <input type="file" name="image" id="image-upload" class="sr-only" x-ref="imageInput"
-                                @change="previewImage()">
-                        </div>
-                        <div class="flex items-center self-stretch gap-4">
-                            <label class="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" name="is_primary" value="1"
-                                    class="w-4 h-4 rounded text-persada-primary focus:ring-persada-primary/50 dark:bg-gray-700 dark:border-gray-600">
-                                <span class="ml-2">Utama</span>
-                            </label>
-                            <button
-                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white rounded-md bg-persada-primary hover:bg-persada-dark-hover">
-                                <x-heroicon-o-arrow-up-tray class="w-4 h-4 sm:-ml-1 sm:mr-2" />
-                                <span class="hidden sm:inline">Upload</span>
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Gambar Produk</h2>
+                    <button type="button" @click="$dispatch('open-product-image')"
+                        class="inline-flex items-center rounded-md bg-persada-primary px-3 py-2 text-sm font-semibold text-white hover:bg-persada-dark-hover">
+                        <x-heroicon-o-arrow-up-tray class="w-4 h-4 sm:-ml-1 sm:mr-2" />
+                        <span class="hidden sm:inline">Tambah Gambar</span>
+                    </button>
+                </div>
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
                     @forelse ($product->images as $image)
                         <div class="relative group aspect-square">
@@ -131,70 +106,14 @@
             </div>
 
             <div class="p-6 bg-white rounded-lg shadow-sm dark:bg-gray-800">
-                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Varian Produk</h2>
-                <form action="{{ route('master.products.variants.store', $product) }}" method="POST"
-                    class="p-4 mb-6 border border-gray-200 rounded-lg dark:border-gray-700">
-                    @csrf
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div class="sm:col-span-2">
-                            <label for="variant-name"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Nama Varian</label>
-                            <input type="text" id="variant-name" name="name" placeholder="e.g., Merah, XL" required
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div>
-                            <label for="variant-price"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Harga</label>
-                            <input type="number" id="variant-price" name="price" placeholder="Rp 150000" required
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div>
-                            <label for="variant-stock"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Stok</label>
-                            <input type="number" id="variant-stock" name="stock" placeholder="100" required
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div>
-                            <label for="variant-sku"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">SKU
-                                (Opsional)</label>
-                            <input type="text" id="variant-sku" name="sku" placeholder="SKU-MERAH-XL"
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div>
-                            <label for="variant-moq"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">MOQ</label>
-                            <input type="number" id="variant-moq" name="moq" value="1" required
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label for="variant-weight"
-                                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Berat
-                                (gram)</label>
-                            <input type="number" id="variant-weight" name="weight_in_grams" placeholder="e.g., 250"
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Dimensi P x L x
-                                T (cm)</label>
-                            <div class="flex gap-2">
-                                <input type="number" name="length_in_cm" placeholder="P"
-                                    class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                                <input type="number" name="width_in_cm" placeholder="L"
-                                    class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                                <input type="number" name="height_in_cm" placeholder="T"
-                                    class="block w-full text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 focus:ring-persada-primary focus:border-persada-primary">
-                            </div>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <button
-                                class="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-semibold text-white rounded-md bg-persada-primary hover:bg-persada-dark-hover">
-                                <x-heroicon-o-plus class="w-4 h-4 -ml-1 mr-2" />
-                                Tambah Varian
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Varian Produk</h2>
+                    <button type="button" @click="$dispatch('open-product-variant')"
+                        class="inline-flex items-center rounded-md bg-persada-primary px-3 py-2 text-sm font-semibold text-white hover:bg-persada-dark-hover">
+                        <x-heroicon-o-plus class="w-4 h-4 sm:-ml-1 sm:mr-2" />
+                        <span class="hidden sm:inline">Tambah Varian</span>
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-100 dark:bg-gray-700">
@@ -230,9 +149,19 @@
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
                                         {{ $variant->stock }}
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400">
+                                            Dipesan: {{ $variant->reserved_stock }} &middot; Tersedia:
+                                            {{ $variant->available_stock }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm font-medium">
                                         <div class="flex items-center gap-x-2">
+                                            <button type="button" title="Catat Mutasi Stok"
+                                                @click="$dispatch('open-stock-movement', { productId: '{{ $product->id }}', variantId: '{{ $variant->id }}' })"
+                                                class="p-1.5 rounded bg-persada-primary text-white hover:bg-persada-dark-hover">
+                                                <x-heroicon-o-arrows-right-left class="w-4 h-4" />
+                                            </button>
+
                                             <form
                                                 action="{{ route('master.products.variants.destroy', [$product, $variant]) }}"
                                                 method="POST">
@@ -259,28 +188,26 @@
                 </div>
             </div>
 
+            <div class="p-6 bg-white rounded-lg shadow-sm dark:bg-gray-800">
+                <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Riwayat Mutasi Stok</h2>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">10 perubahan stok terakhir untuk
+                            produk ini.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('master.stock.index', ['product_id' => $product->id]) }}"
+                            class="text-sm font-medium text-persada-primary hover:underline">
+                            Lihat semua
+                        </a>
+                    </div>
+                </div>
+                @include('pages.dashboard.stock.partials.movements-table')
+            </div>
         </div>
+
+        @include('pages.dashboard.product.partials.image-form')
+        @include('pages.dashboard.product.partials.variant-form')
+        @include('pages.dashboard.stock.partials.form', ['products' => collect([$product])])
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        function imagePreview() {
-            return {
-                imageName: null,
-                imagePreviewUrl: null,
-
-                previewImage() {
-                    const file = this.$refs.imageInput.files[0];
-                    if (file) {
-                        this.imageName = file.name;
-                        this.imagePreviewUrl = URL.createObjectURL(file);
-                    } else {
-                        this.imageName = null;
-                        this.imagePreviewUrl = null;
-                    }
-                }
-            }
-        }
-    </script>
-@endpush

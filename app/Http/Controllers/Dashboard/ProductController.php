@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\StockMovementType;
 use App\Models\Category;
 use App\Models\Product;
+use App\Repositories\Stock\StockMovementRepository;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\ProductRequest;
@@ -20,7 +22,7 @@ class ProductController extends Controller
             ->latest()
             ->paginate(10);
         $categories = Category::all();
-        return view('pages.dashboard.product', compact('products', 'categories'));
+        return view('pages.dashboard.product.index', compact('products', 'categories'));
     }
 
     /**
@@ -63,9 +65,14 @@ class ProductController extends Controller
         return redirect()->route('master.products.index')->with('success', 'Produk berhasil dihapus.');
     }
 
-    public function detail(Product $product)
+    public function detail(Product $product, StockMovementRepository $movements)
     {
         $product->load(['variants', 'images', 'category']);
-        return view('pages.dashboard.product-detail', compact('product'));
+
+        return view('pages.dashboard.product.detail', [
+            'product' => $product,
+            'movements' => $movements->latestForProduct($product->id),
+            'manualTypes' => StockMovementType::manualCases(),
+        ]);
     }
 }

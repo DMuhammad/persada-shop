@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\ProductImageController;
 use App\Http\Controllers\Dashboard\ProductVariantController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\SettingController;
+use App\Http\Controllers\Dashboard\Stock\StockMovementController;
 use App\Http\Controllers\Dashboard\OrderController as DashboardOrderController;
 use App\Http\Controllers\Dashboard\ReportController;
 use App\Http\Controllers\GoogleController;
@@ -117,6 +118,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('orders/{order:order_number}/invoice', [DashboardOrderController::class, 'invoice'])->name('dashboard.orders.invoice');
 
                 Route::prefix('master')->name('master.')->group(function () {
+                    Route::prefix('stock')->name('stock.')->group(function () {
+                        Route::get('/', [StockMovementController::class, 'index'])->name('index');
+                        Route::post('movements', [StockMovementController::class, 'store'])->name('movements.store');
+                    });
+
                     Route::resource('categories', CategoryController::class)->except(['create', 'edit', 'show']);
                     Route::resource('products', ProductController::class)->except(['create', 'edit', 'show']);
 

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\ProductVariant;
+use App\Services\Stock\StockService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use App\Models\User;
+use App\Notifications\OrderCancelledNotification;
 use App\Notifications\PaymentConfirmedNotification;
 use Illuminate\Support\Facades\Notification;
 
 class MidtransController extends Controller
 {
-    public function webhook(Request $request)
+    public function webhook(Request $request, StockService $stockService)
     {
         Config::$serverKey = config('services.midtrans.server_key');
         Config::$isProduction = config('services.midtrans.is_production');
@@ -46,7 +48,7 @@ class MidtransController extends Controller
             $transactionStatus = $payload['transaction_status'];
             $fraudStatus = $payload['fraud_status'];
 
-            DB::transaction(function () use ($order, $transactionStatus, $fraudStatus) {
+            DB::transaction(function () use ($order, $transactionStatus, $fraudStatus, $stockService) {
                 if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
                     if ($fraudStatus == 'accept') {
                         if ($order->status == 'pending_payment') {
@@ -64,11 +66,8 @@ class MidtransController extends Controller
                             }
 
                             foreach ($order->items as $item) {
-                                $variant = ProductVariant::find($item->product_variant_id);
-                                if ($variant) {
-                                    $variant->stock -= $item->quantity;
-                                    $variant->reserved_stock -= $item->quantity;
-                                    $variant->save();
+                                if ($item->productVariant) {
+                                    $stockService->sell($item->productVariant, $item->quantity, $order);
                                 }
                             }
                         }
@@ -88,10 +87,8 @@ class MidtransController extends Controller
                         }
 
                         foreach ($order->items as $item) {
-                            $variant = ProductVariant::find($item->product_variant_id);
-                            if ($variant) {
-                                $variant->reserved_stock -= $item->quantity;
-                                $variant->save();
+                            if ($item->productVariant) {
+                                $stockService->release($item->productVariant, $item->quantity);
                             }
                         }
                     }

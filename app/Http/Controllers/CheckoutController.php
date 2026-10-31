@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\BiteshipService;
 use App\Services\PaymentService;
+use App\Services\Stock\StockService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +112,7 @@ class CheckoutController extends Controller
         return response()->json($shippingRates);
     }
 
-    public function store(Request $request, PaymentService $paymentService)
+    public function store(Request $request, PaymentService $paymentService, StockService $stockService)
     {
         $user = auth()->user();
         $validated = $request->validate([
@@ -132,13 +132,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $order = DB::transaction(function () use ($user, $cartItems, $validated, $shippingRate) {
-                foreach ($cartItems as $item) {
-                    $variant = ProductVariant::where('id', $item->product_variant_id)->lockForUpdate()->first();
-                    if (($variant->stock - $variant->reserved_stock) < $item->quantity) {
-                        throw new Exception("Stok untuk produk {$variant->product->name} - {$variant->name} tidak mencukupi.");
-                    }
-                }
+            $order = DB::transaction(function () use ($user, $cartItems, $validated, $shippingRate, $stockService) {
                 $address = UserAddress::findOrFail($validated['address_id']);
                 $subtotal = $cartItems->sum(fn($item) => $item->productVariant->price * $item->quantity);
                 $orderNumber = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
@@ -167,7 +161,7 @@ class CheckoutController extends Controller
                         'quantity' => $item->quantity,
                         'weight_in_grams' => $item->productVariant->weight_in_grams ?? 100,
                     ]);
-                    $item->productVariant->increment('reserved_stock', $item->quantity);
+                    $stockService->reserve($item->productVariant, $item->quantity);
                 }
 
                 CartItem::whereIn('id', $cartItems->pluck('id'))->delete();

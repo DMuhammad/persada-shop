@@ -58,6 +58,12 @@
                 class="mt-2 ml-5 space-y-1 border-l-2 pl-4 {{ $isDataMaster ? 'border-green-200 dark:border-green-800' : 'border-gray-200 dark:border-gray-700' }}"
                 x-cloak>
                 <li>
+                    <a href="{{ route('master.stock.index') }}"
+                        class="block rounded-md px-4 py-2 text-sm font-medium transition-colors {{ request()->routeIs('master.stock.*') ? 'text-green-700 font-semibold dark:text-green-400' : 'text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400' }}">
+                        Mutasi Stok
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('master.products.index') }}"
                         class="block rounded-md px-4 py-2 text-sm font-medium transition-colors {{ request()->routeIs('master.products.*') ? 'text-green-700 font-semibold dark:text-green-400' : 'text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400' }}">
                         Produk

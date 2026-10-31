@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\ProductVariant;
-use App\Observers\ProductVariantObserver;
+use App\Models\Stock\Stock;
+use App\Observers\StockObserver;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        ProductVariant::observe(ProductVariantObserver::class);
+        Stock::observe(StockObserver::class);
 
         Mail::extend('brevo', function (array $config = []) {
             $apiKey = $config['key'] ?? config('services.brevo.key');
